@@ -6,13 +6,11 @@ package MClient.models;
 public class Message {
     private final int id;
     private final String instruction;
-    private final InstructionType instructionType;
     private InstructionStatus instructionStatus;
 
-    public Message(int id, String instruction, InstructionType instructionType) {
+    public Message(int id, String instruction) {
         this.id = id;
         this.instruction = instruction;
-        this.instructionType = instructionType;
     }
 
     public int getId() {
@@ -21,10 +19,6 @@ public class Message {
 
     public String getInstruction() {
         return instruction;
-    }
-
-    public InstructionType getInstructionType() {
-        return instructionType;
     }
 
     public InstructionStatus getInstructionStatus() {
@@ -40,7 +34,6 @@ public class Message {
         return "Message{" +
                 "id=" + id +
                 ", instruction='" + instruction + '\'' +
-                ", instructionType=" + instructionType +
                 ", instructionStatus=" + instructionStatus +
                 '}';
     }

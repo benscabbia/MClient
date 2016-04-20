@@ -1,6 +1,5 @@
 package MClient.controllers;
 
-import MClient.models.InstructionType;
 import MClient.models.Message;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -21,7 +20,7 @@ public class HomeController {
 
     @RequestMapping(method = RequestMethod.GET)
     public Message message(@RequestParam(value="message", defaultValue = "nothing") String message){
-        return new Message(counter.incrementAndGet(), String.format(template, message), InstructionType.INFO);
+        return new Message(counter.incrementAndGet(), String.format(template, message));
 
     }
 }
