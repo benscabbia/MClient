@@ -1,10 +1,8 @@
 package MClient.controllers;
 
-import MClient.models.Message;
 import MClient.models.SystemInformation;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -27,8 +25,11 @@ public class HomeController {
     private final AtomicInteger counter = new AtomicInteger();
 
     @RequestMapping(method = RequestMethod.GET)
-    public Message message(@RequestParam(value="message", defaultValue = "nothing") String message){
-        return new Message(counter.incrementAndGet(), String.format(template, message));
+//    public Message message(@RequestParam(value="message", defaultValue = "nothing") String message){
+//        return new Message(counter.incrementAndGet(), String.format(template, message));
+//    }
+    public String loadedPage(){
+        return "Page loaded ok";
     }
 
     @RequestMapping(value="/information", method = RequestMethod.GET)
