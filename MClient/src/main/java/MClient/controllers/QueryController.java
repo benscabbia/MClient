@@ -25,6 +25,7 @@ public class QueryController {
     @Autowired
     private PersonRepository personRepository;
 
+    //   ------------------------------------- query/sqlDatabase ---------------------------------------------------
     @RequestMapping(value = "/sqlDatabase", method = RequestMethod.POST)
     @ResponseBody
     public Message processDatabaseQuery(@RequestBody Message instruction, Model model) {

@@ -28,10 +28,13 @@ public class HomeController {
 //    public Message message(@RequestParam(value="message", defaultValue = "nothing") String message){
 //        return new Message(counter.incrementAndGet(), String.format(template, message));
 //    }
+
+    //   ------------------------------------- GET / ---------------------------------------------------
     public String loadedPage(){
         return "Page loaded ok";
     }
 
+    //   ------------------------------------- GET /information ---------------------------------------------------
     @RequestMapping(value="/information", method = RequestMethod.GET)
     public SystemInformation displayInfo(){
         SystemInformation systemInfo = new SystemInformation();
