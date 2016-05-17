@@ -13,7 +13,14 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
-apply plugin: 'spring-boot' 
+apply plugin: 'spring-boot'
+
+configurations.all {
+	//exclude module: 'logback-classic'
+	//required for errors
+	exclude module: 'slf4j-log4j12'
+	exclude module: 'javax.servlet'
+}
 
 jar {
 	baseName = 'mclient'
@@ -30,30 +37,53 @@ repositories {
 dependencies {
     compile('org.springframework.boot:spring-boot-starter-web')
 
-    //dev tools dependency
+	//spark
+	//compile 'org.apache.spark:spark-core_2.11:1.4.0' //bug in this version
+    //compile group: 'org.apache.spark', name: 'spark-core_2.11', version: '1.5.2' //working but - java.io.IOException: Could not locate executable null\bin\winutils.exe in the Hadoop binaries.
+    compile group: 'org.apache.spark', name: 'spark-core_2.11', version: '1.6.1' //working but - java.io.IOException: Could not locate executable null\bin\winutils.exe in the Hadoop binaries.
+
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.4.4' //required or it breaks down at phase 3
+
+	//dev tools dependency
     compile("org.springframework.boot:spring-boot-devtools")
     compile("org.springframework.boot:spring-boot-actuator")
-
-	//database
+//
+//	//database
 	compile("org.springframework.boot:spring-boot-starter-data-jpa")
 	compile("com.h2database:h2")
 	testCompile("junit:junit")
 	compile('mysql:mysql-connector-java')
-
+//
     testCompile('org.springframework.boot:spring-boot-starter-test')
     testCompile("junit:junit")
 
     //compile("com.jayway.jsonpath:json-path:0.8.1")
 
+	//TEST
 }
 
 
-eclipse {
-	classpath {
-		 containers.remove('org.eclipse.jdt.launching.JRE_CONTAINER')
-		 containers 'org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8'
-	}
-}
+
+
+//configurations.all {
+//	resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+//		if (details.requested.name == 'log4j') {
+//			details.useTarget "org.slf4j:log4j-over-slf4j:1.7.16"
+//		}
+//	}
+//}
+
+
+
+
+
+
+//eclipse {
+//	classpath {
+//		 containers.remove('org.eclipse.jdt.launching.JRE_CONTAINER')
+//		 containers 'org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8'
+//	}
+//}
 
 task wrapper(type: Wrapper) {
 	gradleVersion = '2.9'

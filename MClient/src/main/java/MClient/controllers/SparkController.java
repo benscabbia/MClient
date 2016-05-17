@@ -1,6 +1,7 @@
 package MClient.controllers;
 
 import MClient.models.spark.ClientWithSparkInstruction;
+import MClient.models.spark.SparkHandler;
 import MClient.models.spark.SparkType;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,16 @@ public class SparkController {
             SparkType type = received.getSingleClientSparkInstruction().getSparkType();
             boolean sorted = received.getSingleClientSparkInstruction().isSorted();
 
-            received.setResponse("WE HAVE RECEIVED IT AND SENT IT BACK");
+            String sparkResult = "";
+            try{
+
+                sparkResult += SparkHandler.process(received);
+
+            }catch (Exception e){
+                System.out.println("SPARK EXCEPTION");
+            }
+
+            received.setResponse(sparkResult);
 
             //  try {
 
@@ -51,7 +61,6 @@ public class SparkController {
             //}
             return received;
         }else{
-            return received;
-        }
+            throw new NullPointerException();        }
     }
 }
