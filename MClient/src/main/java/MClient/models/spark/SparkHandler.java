@@ -21,6 +21,8 @@ import java.util.List;
  */
 public class SparkHandler {
 
+    private static SparkConf conf = new SparkConf().setMaster("local").setAppName("Work Count App");
+    private static JavaSparkContext sc = new JavaSparkContext(conf);
 
     public static String process(ClientWithSparkInstruction clientWithSparkInstruction){
 
@@ -28,11 +30,8 @@ public class SparkHandler {
         SparkType type = clientWithSparkInstruction.getSingleClientSparkInstruction().getSparkType();
         boolean sorted = clientWithSparkInstruction.getSingleClientSparkInstruction().isSorted();
 
-        //d:\Ben\Desktop\test-small.txt
-
         //String t = "d:\\Ben\\Desktop\\test-small.txt";
         //String t2 = "d:/Ben/Desktop/test-small.txt";
-       // d:\Ben\Desktop
 
         if(validateFile(filePath)){
             if(type == SparkType.WORDCOUNT){
@@ -54,39 +53,16 @@ public class SparkHandler {
 
             // Define a configuration to use to interact with Spark
             System.out.println("==========================PHASE 1 ================");
+            log += "Phase one - Initializing Spark: Complete\n";
 
-//            Random random = new Random();
-//            int max = 60000, min=3000;
-//            //SparkConf conf = new SparkConf().setMaster("local").setAppName("Work Count App" + n);
-//            while(true){
-//                int  n = random.nextInt(max - min + 1) + min;
-//                try{
-//                    conf = new SparkConf().setMaster("local").setAppName("Work Count App" + n);
-//
-//
-//                }catch (BindException ex){
-//
-//                }
-//            }
-             SparkConf conf = new SparkConf().setMaster("local").setAppName("Work Count App");
-
-            //SparkConf conf = new SparkConf().setMaster("spark://local:" + n).setAppName("Work Count App" + n);
-            log += "Phase one complete\n";
-
-//
             System.out.println("==========================PHASE 2 ================");
-//        // Create a Java version of the Spark Context from the configuration
-           // JavaSparkContext sc = new JavaSparkContext(conf);
-            JavaSparkContext sc = new JavaSparkContext(conf);
-            log += "Phase two complete\n";
+//        // Load the input data, which is a text file read from the command line
+            log += "Phase Two - loading the input data into textfile: ";
+            JavaRDD<String> input = sc.textFile( filePath );
+            log += "Complete\n";
 //
             System.out.println("==========================PHASE 3 ================");
-//        // Load the input data, which is a text file read from the command line
-            JavaRDD<String> input = sc.textFile( filePath );
-            log += "Phase three complete\n";
-//
-            System.out.println("==========================PHASE 4 ================");
-//        // Java 7 and earlier
+            log += "Phase Three - Processing the data: ";
             JavaRDD<String> words = input.flatMap(
                     new FlatMapFunction<String, String>() {
                         public Iterable<String> call(String s) {
@@ -94,10 +70,11 @@ public class SparkHandler {
                         }
                     } );
 //
-            log += "Phase four complete\n";
+            log += "Complete\n";
 
-            System.out.println("==========================PHASE 5 ================");
+            System.out.println("==========================PHASE 4 ================");
 //        // Java 7 and earlier: transform the collection of words into pairs (word and 1)
+            log += "Phase Four - Counting the data: ";
             JavaPairRDD<String, Integer> counts = words.mapToPair(
                     new PairFunction<String, String, Integer>(){
                         public Tuple2<String, Integer> call(String s){
@@ -105,24 +82,27 @@ public class SparkHandler {
                         }
                     } );
 //
-            log += "Phase five complete\n";
+            log += "Complete\n";
 
-            System.out.println("==========================PHASE 6 ================");
-//        // Java 7 and earlier: count the words
+            System.out.println("==========================PHASE 5 ================");
+            log += "Phase Five - Reducing the data: ";
             JavaPairRDD<String, Integer> reducedCounts = counts.reduceByKey(
                     new Function2<Integer, Integer, Integer>(){
                         public Integer call(Integer x, Integer y){ return x + y; }
                     } );
 
-            log += "Phase six complete\n";
+            log += "Complete\n";
 //
-            System.out.println("==========================PHASE 7 ================");
+            System.out.println("==========================PHASE 6 ================");
+            log += "Phase Six - Moving data to a List: ";
             List arr = reducedCounts.collect();
 
-            log += "Phase seven complete\n";
+            log += "Complete \n";
 //        // Save the word count back out to a text file, causing evaluation.
 //
 //
+            System.out.println("==========================PHASE 7 ================");
+            log += "Phase Seven - Sorting and Packing data: ";
             //TODO need to check if sorted, and if so, sort the results
             String resultSet = "";
             for(Object a : arr){
@@ -130,12 +110,14 @@ public class SparkHandler {
                 System.out.println(tuple);
                 resultSet += tuple + ", ";
             }
+            log += "Complete\n";
 
             return resultSet;
 
         }catch (Exception e){
-            System.out.println("ERROR FROM WITHIN SPARK ");
-            return log + "\n " + e.getStackTrace();
+            System.out.println("Error. Spark Exception.");
+            log += "Error (Spark Exception): " + e.getStackTrace()[0] + ", CAUSE: " + e.getCause();
+            return log;
         }
     };
 
