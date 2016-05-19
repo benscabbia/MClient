@@ -52,7 +52,7 @@ public class QueryController {
                 received.setClientResponse(people.toString());
 
             }catch (Exception e){
-                received.setClientResponse(e.getStackTrace() + " error");
+                received.setClientResponse(e.getStackTrace()[0] + "");
             }
         }
         return received;

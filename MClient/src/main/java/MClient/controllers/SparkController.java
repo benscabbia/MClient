@@ -15,12 +15,12 @@ public class SparkController {
 
 
     //   ------------------------------------- POST spark/wordcount ---------------------------------------------------
-    @RequestMapping(value = "/wordcount", method = RequestMethod.POST)
+//    @RequestMapping(value = "/wordcount", method = RequestMethod.POST)
+    @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     public ClientWithSparkInstruction processSpark(@RequestBody ClientWithSparkInstruction instruction, Model model) {
 
         ClientWithSparkInstruction received = instruction;
-
 
         if (received != null) {
             String filePath = received.getSingleClientSparkInstruction().getFileDirectory();
@@ -39,27 +39,6 @@ public class SparkController {
 
             received.setResponse(sparkResult);
 
-            //  try {
-
-//
-////                Person p = new Person();
-////                javax.persistence.Query query = em.createNativeQuery(sqlQuery, p.getClass());
-////                p = (Person)query.getSingleResult();
-//                //"SELECT p FROM Person p"
-//                TypedQuery<Person> q = em.createQuery(sqlQuery, Person.class);
-//
-//                List<Person> people = q.getResultList();
-//
-//                for(Person p : people){
-//                    System.out.println(p.toString());
-//                }
-//
-//                received.setClientResponse(people.toString());
-//
-//            }catch (Exception e){
-//                received.setClientResponse(e.getStackTrace() + " error");
-//            }
-            //}
             return received;
         }else{
             throw new NullPointerException();        }
