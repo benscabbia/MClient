@@ -5,16 +5,13 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.DatagramSocket;
-import java.net.ServerSocket;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by Ben on 13/05/2016.
@@ -26,9 +23,15 @@ public class SparkHandler {
 
     public static String process(ClientWithSparkInstruction clientWithSparkInstruction){
 
-        String filePath = clientWithSparkInstruction.getSingleClientSparkInstruction().getFileDirectory();
+        String input = clientWithSparkInstruction.getSingleClientSparkInstruction().getFileDirectory();
+
+        String[] filePathAndSearchTerm = getFilePathAndSearchTerm(input);
+
+        String filePath = filePathAndSearchTerm[0];
+        String searchWord = filePathAndSearchTerm[1];
         SparkType type = clientWithSparkInstruction.getSingleClientSparkInstruction().getSparkType();
         boolean sorted = clientWithSparkInstruction.getSingleClientSparkInstruction().isSorted();
+
 
         //String t = "d:\\Ben\\Desktop\\test-small.txt";
         //String t2 = "d:/Ben/Desktop/test-small.txt";
@@ -38,7 +41,13 @@ public class SparkHandler {
                 return wordCount(filePath, sorted);
             }
             else if(type == SparkType.WORDSEARCH){
-                return wordSearch(filePath, sorted);
+
+                 if(searchWord != null && !searchWord.isEmpty()){
+                    return wordSearch(filePath, searchWord, sorted);
+                }else {
+                    return "ERROR in issuing flag. Format is: 'directory [key]'";
+                }
+
             }else{
                 return "Unknown Spark Command";
             }
@@ -50,13 +59,11 @@ public class SparkHandler {
     private static String wordCount(String filePath, boolean sorted){
         String log = ""; //used incase of exception
         try{
-
-            // Define a configuration to use to interact with Spark
             System.out.println("==========================PHASE 1 ================");
             log += "Phase one - Initializing Spark: Complete\n";
 
             System.out.println("==========================PHASE 2 ================");
-//        // Load the input data, which is a text file read from the command line
+//        // Load the input data
             log += "Phase Two - loading the input data into textfile: ";
             JavaRDD<String> input = sc.textFile( filePath );
             log += "Complete\n";
@@ -95,77 +102,126 @@ public class SparkHandler {
 //
             System.out.println("==========================PHASE 6 ================");
             log += "Phase Six - Moving data to a List: ";
-            List arr = reducedCounts.collect();
+            //List arr = reducedCounts.collect();
+            Map<String, Integer> arr = reducedCounts.collectAsMap();
 
             log += "Complete \n";
 //        // Save the word count back out to a text file, causing evaluation.
-//
-//
+
             System.out.println("==========================PHASE 7 ================");
             log += "Phase Seven - Sorting and Packing data: ";
             //TODO need to check if sorted, and if so, sort the results
             String resultSet = "";
-            for(Object a : arr){
-                Tuple2<String, Integer> tuple = (Tuple2)a;
-                System.out.println(tuple);
-                resultSet += tuple + ", ";
-            }
-            log += "Complete\n";
 
-            return resultSet;
+            if(sorted){
+
+                TreeMap<String, Integer> sortedResults = sortMapByValue(arr);
+                log += "Complete\n";
+                return sortedResults.toString();
+
+            }else{
+                log += "Complete\n";
+                return arr.toString();
+            }
 
         }catch (Exception e){
             System.out.println("Error. Spark Exception.");
             log += "Error (Spark Exception): " + e.getStackTrace()[0] + ", CAUSE: " + e.getCause();
             return log;
         }
+    }
+
+    private static TreeMap<String,Integer> sortMapByValue(Map<String, Integer> map) {
+        Comparator<String> comparator = new sortMapByValueComparator(map);
+        //TreeMap used to sort the keys and comparator sorts by keys
+        TreeMap<String, Integer> result = new TreeMap<String, Integer>(comparator);
+        result.putAll(map);
+        return result;
     };
 
 
-    private static String wordSearch(String filePath, boolean sorted){return "TODO implementation";};
+    private static String wordSearch(String filePath, final String searchWord, boolean sorted){
+        String log = ""; //used incase of exception
+
+
+
+        try{
+            System.out.println("==========================PHASE 1 ================");
+            log += "Phase one - Initializing Spark: Complete\n";
+
+            System.out.println("==========================PHASE 2 ================");
+            // Load the input data
+            log += "Phase Two - loading the input data into textfile: ";
+            //JavaRDD<String> input = sc.textFile( filePath );
+            //JavaRDD<String> input = sc.textFile("d:/Ben/Desktop/test-small.txt");
+            log += "Complete\n";
+
+            System.out.println("==========================PHASE 3 ================");
+            log += "Phase Three - Initializing Spark: Complete\n";
+
+            JavaRDD<String> lines = sc.textFile("d:/Ben/Desktop/test-small.txt").filter(
+                    new Function<String, Boolean>() {
+                        public Boolean call(String s) {
+                            return s.contains(searchWord);
+                        }
+                    });
+
+            log += "Complete\n";
+            return  searchWord + " was found: " + lines.count() + " times";
+
+        }catch(Exception e){
+            System.out.println("Error. Spark Exception.");
+            log += "Error (Spark Exception): " + e.getStackTrace()[0] + ", CAUSE: " + e.getCause();
+            return log;
+        }
+    };
 
     private static boolean validateFile(String filePath){
-
         File file = new File(filePath);
         return file.exists() && file.canRead();
-//        System.out.println(file.toString()); //d:\Ben\Desktop\test-small.txt
-//        System.out.println(file.exists()); //bool
-//        System.out.println(file.getParentFile()); //d:\Ben\Desktop
-//        System.out.println(file.getAbsoluteFile()); //d:\Ben\Desktop\test-small.txt
     }
 
 
+    private static String[] getFilePathAndSearchTerm(String filePath) {
+        String[] details = new String[2];
 
-    public static boolean validatePort(int port) {
-        if (port < 2000 || port > 50000) {
-            return false;
-        }
-        //implementation from Apache camel project
-        //http://svn.apache.org/viewvc/camel/trunk/components/camel-test/src/main/java/org/apache/camel/test/AvailablePortFinder.java?view=markup#l130
+        if(!filePath.isEmpty()){
+            int start = filePath.indexOf("["); //find the index of searchTerm
+            int end = filePath.indexOf("]"); //find the index of searchTerm
 
-        ServerSocket ss = null;
-        DatagramSocket ds = null;
-        try {
-            ss = new ServerSocket(port);
-            ss.setReuseAddress(true);
-            ds = new DatagramSocket(port);
-            ds.setReuseAddress(true);
-            return true;
-        } catch (IOException e) {
-        } finally {
-            if (ds != null) {
-                ds.close();
+            if(start <= 0 || end <= 0 || start>=end){
+                //no input string or input string mistake, return just the path
+                String cleanFilePath = filePath.replace("[", ""); //make sure there are no trailing brackets
+                cleanFilePath = cleanFilePath.replace("]", "");
+
+                details[0] = cleanFilePath;
+                return details;
             }
 
-            if (ss != null) {
-                try {
-                    ss.close();
-                } catch (IOException e) {
-                /* should not be thrown */
-                }
-            }
+            String searchKey = filePath.substring(start, end+1); //{searchKey}
+            String replaced = filePath.replace(searchKey, "");
+            searchKey = searchKey.substring(1, searchKey.length()-1); //searchKey
+            details[0] = replaced;
+            details[1] = searchKey;
+            return details;
+        }
+        return null;
+    }
+
+    private static class sortMapByValueComparator implements Comparator<String> {
+        Map<String, Integer> map = new HashMap<String, Integer>();
+
+        public sortMapByValueComparator(Map<String, Integer> map) {
+            this.map.putAll(map);
         }
 
-        return false;
+        @Override
+        public int compare(String o1, String o2) {
+            if(map.get(o1) >= map.get(o2)){
+                return -1;
+            }else {
+                return 1;
+            }
+        }
     }
 }

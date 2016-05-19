@@ -34,6 +34,7 @@ public class SparkController {
 
             }catch (Exception e){
                 System.out.println("SPARK EXCEPTION");
+                sparkResult += "SPARK EXCEPTION: " + e.getStackTrace()[0];
             }
 
             received.setResponse(sparkResult);
