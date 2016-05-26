@@ -1,5 +1,6 @@
 package MClient.controllers;
 
+import MClient.models.FileOperator;
 import MClient.models.Message;
 import MClient.models.databaseSample.MongoPerson;
 import MClient.models.databaseSample.Person;
@@ -39,15 +40,14 @@ public class QueryController {
 
         Message received = instruction;
         if(received!= null){
-            String sqlQuery = received.getInstruction();
+            String receivedInstruction = received.getInstruction();
 
             try{
+                String[] queryAndResultType = FileOperator.getStringAndSearchTerm(receivedInstruction);
+                String sqlQuery = queryAndResultType[0];
+                String resultType = queryAndResultType[1];
 
-
-//                Person p = new Person();
-//                javax.persistence.Query query = em.createNativeQuery(sqlQuery, p.getClass());
-//                p = (Person)query.getSingleResult();
-                                                    //"SELECT p FROM Person p"
+                //"SELECT p FROM Person p"
                 TypedQuery<Person> q = em.createQuery(sqlQuery, Person.class);
 
                 List<Person> people = q.getResultList();
@@ -56,7 +56,13 @@ public class QueryController {
                     System.out.println(p.toString());
                 }
 
-                received.setClientResponse(people.toString());
+                if (resultType != null && resultType.toLowerCase().equals("count")) {
+                    received.setClientResponse(people.size() + "");
+                }else{
+                    received.setClientResponse(people.toString());
+                }
+
+
 
             }catch (Exception e){
                 received.setClientResponse(e.getStackTrace()[0] + "");
@@ -83,11 +89,20 @@ public class QueryController {
                 MongoOperations mongoOperations = (MongoOperations)mongoTemplate;
                 //e.g. {firstName : 'Sarah'}, {firstName : 'Sarah', age:46}, {firstName : 'Sarah', age: {$gte: 20}}
 
-                BasicQuery query  = new BasicQuery(received.getInstruction());
+                String[] queryAndResultType = FileOperator.getStringAndSearchTerm(received.getInstruction());
+                String mongoQuery = queryAndResultType[0];
+                String resultType = queryAndResultType[1];
+
+                BasicQuery query  = new BasicQuery(mongoQuery);
                 List<MongoPerson> people = mongoOperations.find(query, MongoPerson.class);
 
                 if(people.size()>0){
-                    received.setClientResponse(people.toString());
+
+                    if(resultType != null && resultType.toLowerCase().equals("count")){
+                        received.setClientResponse(people.size() + "");
+                    }else{
+                        received.setClientResponse(people.toString());
+                    }
                 }else{
                     received.setClientResponse("Result set was Empty.");
                 }

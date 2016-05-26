@@ -1,5 +1,6 @@
 package MClient.models.spark;
 
+import MClient.models.FileOperator;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -10,7 +11,6 @@ import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
 
-import java.io.File;
 import java.util.*;
 
 /**
@@ -25,7 +25,7 @@ public class SparkHandler {
 
         String input = clientWithSparkInstruction.getSingleClientSparkInstruction().getFileDirectory();
 
-        String[] filePathAndSearchTerm = getFilePathAndSearchTerm(input);
+        String[] filePathAndSearchTerm = FileOperator.getStringAndSearchTerm(input);
 
         String filePath = filePathAndSearchTerm[0];
         String searchWord = filePathAndSearchTerm[1];
@@ -36,7 +36,7 @@ public class SparkHandler {
         //String t = "d:\\Ben\\Desktop\\test-small.txt";
         //String t2 = "d:/Ben/Desktop/test-small.txt";
 
-        if(validateFile(filePath)){
+        if(FileOperator.validateFile(filePath)){
             if(type == SparkType.WORDCOUNT){
                 return wordCount(filePath, sorted);
             }
@@ -176,37 +176,9 @@ public class SparkHandler {
         }
     };
 
-    private static boolean validateFile(String filePath){
-        File file = new File(filePath);
-        return file.exists() && file.canRead();
-    }
 
 
-    private static String[] getFilePathAndSearchTerm(String filePath) {
-        String[] details = new String[2];
 
-        if(!filePath.isEmpty()){
-            int start = filePath.indexOf("["); //find the index of searchTerm
-            int end = filePath.indexOf("]"); //find the index of searchTerm
-
-            if(start <= 0 || end <= 0 || start>=end){
-                //no input string or input string mistake, return just the path
-                String cleanFilePath = filePath.replace("[", ""); //make sure there are no trailing brackets
-                cleanFilePath = cleanFilePath.replace("]", "");
-
-                details[0] = cleanFilePath;
-                return details;
-            }
-
-            String searchKey = filePath.substring(start, end+1); //{searchKey}
-            String replaced = filePath.replace(searchKey, "");
-            searchKey = searchKey.substring(1, searchKey.length()-1); //searchKey
-            details[0] = replaced;
-            details[1] = searchKey;
-            return details;
-        }
-        return null;
-    }
 
     private static class sortMapByValueComparator implements Comparator<String> {
         Map<String, Integer> map = new HashMap<String, Integer>();
