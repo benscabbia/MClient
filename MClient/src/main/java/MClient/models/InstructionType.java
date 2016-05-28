@@ -5,7 +5,7 @@ package MClient.models;
  */
 public enum InstructionType {
     HEALTH,
-    INFO,
+//    INFO,
     METRICS,
     QUERY,
     SHUTDOWN
