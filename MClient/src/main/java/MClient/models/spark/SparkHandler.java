@@ -152,19 +152,17 @@ public class SparkHandler {
             System.out.println("==========================PHASE 2 ================");
             // Load the input data
             log += "Phase Two - loading the input data into textfile: ";
-            //JavaRDD<String> input = sc.textFile( filePath );
-            //JavaRDD<String> input = sc.textFile("d:/Ben/Desktop/test-small.txt");
-            log += "Complete\n";
-
-            System.out.println("==========================PHASE 3 ================");
-            log += "Phase Three - Initializing Spark: Complete\n";
-
-            JavaRDD<String> lines = sc.textFile("d:/Ben/Desktop/test-small.txt").filter(
+            JavaRDD<String> lines = sc.textFile(filePath).filter(
                     new Function<String, Boolean>() {
                         public Boolean call(String s) {
                             return s.contains(searchWord);
                         }
                     });
+            log += "Complete\n";
+
+            System.out.println("==========================PHASE 3 ================");
+
+            log += "Phase Three - Initializing Spark: Complete\n";
 
             log += "Complete\n";
             return  searchWord + " was found: " + lines.count() + " times";
