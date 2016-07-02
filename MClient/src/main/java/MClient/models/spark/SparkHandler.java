@@ -110,7 +110,6 @@ public class SparkHandler {
 
             System.out.println("==========================PHASE 7 ================");
             log += "Phase Seven - Sorting and Packing data: ";
-            //TODO need to check if sorted, and if so, sort the results
             String resultSet = "";
 
             if(sorted){
